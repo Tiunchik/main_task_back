@@ -1,10 +1,8 @@
 package manager.task.plugins
 
-import io.ktor.routing.*
-import io.ktor.http.*
 import io.ktor.application.*
 import io.ktor.response.*
-import io.ktor.request.*
+import io.ktor.routing.*
 
 fun Application.configureRouting() {
     // Starting point for a Ktor app:
@@ -15,3 +13,17 @@ fun Application.configureRouting() {
     }
 
 }
+
+//fun Application.module() {
+//    install(WebSockets)
+//    routing {
+//        webSocket("/chat") {
+//            send("You are connected!")
+//            for(frame in incoming) {
+//                frame as? Frame.Text ?: continue
+//                val receivedText = frame.readText()
+//                send("You said: $receivedText")
+//            }
+//        }
+//    }
+//}
