@@ -11,6 +11,9 @@ plugins {
 //    id "kotlin-plugin.serialization" version "1.5.30"
 }
 
+apply plugin: 'kotlin' // or 'kotlin-multiplatform' for multiplatform projects
+apply plugin: 'kotlinx-serialization'
+
 group "manager.task"
 version "0.0.1"
 mainClassName = "manager.task.ApplicationKt"
@@ -61,6 +64,8 @@ dependencies {
 //    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-serialization-runtime-common', version: '0.4.1'
 
 //    classpath "org.jetbrains.kotlin:kotlin-serialization:1.5.30"
+
+    implementation 'com.google.code.gson:gson:2.8.5'
 }
 compileKotlin {
     kotlinOptions {
@@ -73,5 +78,3 @@ compileTestKotlin {
     }
 }
 
-apply plugin: 'kotlin' // or 'kotlin-multiplatform' for multiplatform projects
-apply plugin: 'kotlinx-serialization'

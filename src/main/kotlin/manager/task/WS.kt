@@ -1,10 +1,9 @@
-package manager.task.ws
+package manager.task
 
-import com.typesafe.config.Optional
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import manager.task.User
-import kotlin.reflect.KClass
+import manager.task.models.User
+import kotlin.reflect.KFunction1
+
+annotation class WsEndpoint
 
 class WS {
 
@@ -13,7 +12,7 @@ class WS {
         val auth: String,
         val reqId: String,
         /** поле инициализируется на беке, фронт не должен его отсылать.*/
-        @Optional val activityId: Long = -1,
+        val activityId: Long = -1,
         /** JSON с фронта */
         val body: String
     )
@@ -35,19 +34,33 @@ class WS {
 
 
     object Mappings {
-        val mappings = mutableMapOf<String, Pair<KClass<*>, (arg: Any) -> Any>>()
+        val mappings = mutableMapOf<String, PathHandler<Any>>()
 
 
-         inline fun <reified T> setMapping(path: String, noinline handle: (arg: Any) -> Any) {
-            mappings[path] = Pair(T::class, handle)
+         inline fun <reified T> setMapping(path: String, pathHandler: KFunction1<Any, Any>) {
+            mappings[path] = PathHandler(T::class.java, pathHandler)
         }
 
-        fun process(income: IncomeMsg) {
-            val j = mappings[income.path]
-            val pojo = Json.decodeFromString<User>(income.body)
+        fun process(income: IncomeMsg) : Any {
+            val pathHandler = mappings[income.path]
+                ?: throw IllegalAccessError("""Mapping:"${income.path} is noy supported""")
+
+            // TODO : короче здесь парсинг json → DTO
+//            val pojo = Json.decodeFromString(pathHandler.argType, income.body)
+
+            // TODO : это временно ↓
+            val temp = income.body.split(",")
+            val pojo = User(temp[0], temp[1], temp[2])
+
+//            val t = pathHandler.argType!!::class.java
+//            val pojo = Utils.gson.fromJson(income.body, pathHandler.argType!!::class.java)
+//            return pathHandler.pathHandler.invoke(pojo as )
+            return pathHandler.pathHandler.invoke(pojo)
+
         }
     }
-    data class Mapping(val argType : KClass<*>)
+    data class PathHandler<T>(val argType : Class<*>, val pathHandler: KFunction1<User, Any>)
+
 
     object Requests {
         private val requests = mutableMapOf<String, Pair<IncomeMsg, OutcomeMsg?>>()

@@ -6,14 +6,19 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
-import manager.task.ws.WS
+import manager.task.dao.memory.UserRepo
+import manager.task.models.User
+import kotlin.reflect.KFunction1
 
 /**
  * TODO : error pojo - единая структура для всех error
  * TODO : посмотреть примеры Идеальной архитектуры ktor
  * TODO : авто-парсинг JSON в POJO ожидаемый методов который обрабатывает path
  * TODO : ? postman workspace ?
- * TODO : решить вопрос с @Serializable
+ * TODO : решить вопрос с @Serializable VS Gson
+ * TODO : Почитать про data class + kotlin reflection
+ * TODO :
+ * TODO :
  * TODO :
  *
  */
@@ -23,7 +28,7 @@ fun main() {
             userRepo = UserRepo()
         }
         buildMappings {
-            WS.Mappings.setMapping("c/user", userRepo::userCreate)
+            WS.Mappings.setMapping<User>("c/user", userRepo::userCreate as KFunction1<Any, Any>)
         }
         module()
     }.start(wait = true)
@@ -41,6 +46,18 @@ fun buildMappings(dsl: AppContext.() -> Unit) {
     dsl.invoke(AppContext)
 }
 
+
+/**
+ * Тест для postman
+ * 127.0.0.1:8080
+
+c/user
+auth
+reqId
+nick,login,password
+
+ *
+ */
 fun Application.module() {
     install(WebSockets)
     routing {
@@ -51,6 +68,7 @@ fun Application.module() {
                 frame as? Frame.Text ?: continue
                 val wsMsg = frame.readText().split("\r\n")
 
+                println(wsMsg)
 
                 val income = WS.IncomeMsg(
                     path = wsMsg[0], auth = wsMsg[1],
@@ -58,44 +76,32 @@ fun Application.module() {
                     activityId = WS.Requests.nextActivityId
                 )
                 WS.Requests.setIncome(income.reqId, income)
-                println("income: $income")
+                System.err.println("income: $income")
 
-                val hz4to = WS.Mappings.process(income)
+                var outcome : WS.OutcomeMsg
+                try {
+                    val response = WS.Mappings.process(income)
+                    outcome = WS.OutcomeMsg(
+                        reqId = income.reqId,
+                        activityId = income.activityId,
+                        success = true,
+                        data = Utils.gson.toJson(response)
+                        )
+                } catch (e : Throwable) {
+                    e.printStackTrace(System.err)
+                    outcome = WS.OutcomeMsg(
+                        reqId = income.reqId,
+                        activityId = income.activityId,
+                        success = false,
+                        data = "${e::class.qualifiedName}(\"${e.message}\")"
+                    )
+                }
 
-                send("")
+                System.err.println("outcome: $outcome")
+                send(Utils.gson.toJson(outcome))
             }
         }
     }
-}
-
-
-class UserRepo {
-    private val userStore = mutableListOf<User>()
-
-    fun userCreate(user: User): Any {
-        // TODO : сделать парсинг в параметров для wsMsg.
-        userStore += user
-        return ""
-    }
-
-    fun userRead(lines: List<String>): Any {
-        val searchParam = lines[1]
-        userStore.forEach { if (it.matchAnyField(searchParam)) return it }
-        return ""
-    }
-}
-
-// TODO : kotlinx.serialization
-@Serializable
-data class User(val nick: String, val login: String, val password: String)
-
-fun User.matchAnyField(search: Any): Boolean {
-    if (search is String) {
-        if (nick.contains(search)) return true
-        if (login.contains(search)) return true
-        if (password.contains(search)) return true
-    }
-    return false
 }
 
 
