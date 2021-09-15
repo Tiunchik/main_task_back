@@ -1,12 +1,10 @@
 package manager.task.dao.memory
 
-import manager.task.WsEndpoint
 import manager.task.models.User
 
 class UserRepo {
     private val userStore = mutableListOf<User>()
 
-    @WsEndpoint
     fun userCreate(user: User): Any {
         // TODO : сделать парсинг в параметров для wsMsg.
         userStore += user
