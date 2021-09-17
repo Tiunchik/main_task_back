@@ -1,6 +1,4 @@
-package manager.task.dao.memory
-
-import manager.task.models.User
+package manager.task.domains.user
 
 class UserRepo {
     private val userStore = mutableListOf<User>()

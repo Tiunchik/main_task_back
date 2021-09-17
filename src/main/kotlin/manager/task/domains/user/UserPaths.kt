@@ -1,8 +1,7 @@
-package manager.task.paths
+package manager.task.domains.user
 
-import manager.task.WS.Paths.path
-import manager.task.WS.Paths.pathCtx
-import manager.task.models.User
+import manager.task.common.WS.Paths.path
+import manager.task.common.WS.Paths.pathCtx
 
 fun userControllerPaths() {
 

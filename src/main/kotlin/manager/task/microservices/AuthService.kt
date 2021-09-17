@@ -1,6 +1,6 @@
-package manager.task.services
+package manager.task.microservices
 
-import manager.task.models.User
+import manager.task.domains.user.User
 
 class AuthService {
     fun getCurrentUser(incomeAuth : String) : User {

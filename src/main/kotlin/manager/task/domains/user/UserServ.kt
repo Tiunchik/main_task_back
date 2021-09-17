@@ -1,4 +1,4 @@
-package manager.task.services
+package manager.task.domains.user
 
 import manager.task.AppCtx
 

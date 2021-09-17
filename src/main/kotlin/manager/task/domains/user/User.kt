@@ -1,4 +1,4 @@
-package manager.task.models
+package manager.task.domains.user
 
 data class User(
     val id: Long,

@@ -1,7 +1,7 @@
-package manager.task.utils
+package manager.task.common.utils
 
 import com.google.gson.Gson
-import manager.task.exceptions.JsonParseException
+import manager.task.common.JsonParseException
 import java.lang.reflect.Type
 
 object Utils {

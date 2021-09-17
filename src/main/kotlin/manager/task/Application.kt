@@ -5,12 +5,13 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
+import manager.task.common.log
+import manager.task.common.webSocketListeningMechanism
 import manager.task.configs.PsqlConfig
-import manager.task.dao.memory.UserRepo
-import manager.task.paths.userControllerPaths
-import manager.task.services.AuthService
-import manager.task.services.UserServ
-import manager.task.utils.log
+import manager.task.domains.user.UserRepo
+import manager.task.domains.user.UserServ
+import manager.task.domains.user.userControllerPaths
+import manager.task.microservices.AuthService
 
 
 /*

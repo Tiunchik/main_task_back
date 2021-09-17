@@ -1,14 +1,10 @@
-package manager.task
+package manager.task.common
 
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
-import manager.task.WS.Requests.setOutcome
-import manager.task.exceptions.ConfigurationException
-import manager.task.exceptions.JsonParseException
-import manager.task.exceptions.PathIsNotSupported
-import manager.task.utils.Utils
-import manager.task.utils.Utils.gson
-import manager.task.utils.log
+import manager.task.AppCtx
+import manager.task.common.utils.Utils
+import manager.task.common.utils.Utils.gson
 import java.lang.reflect.Type
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
@@ -76,7 +72,7 @@ private fun parseIncome(src: String): Pair<WS.Income, String> {
 }
 
 private suspend fun DefaultWebSocketServerSession.sendOutcome(outcome: WS.Outcome) {
-    setOutcome(outcome.reqId, outcome)
+    WS.Requests.setOutcome(outcome.reqId, outcome)
     send(gson.toJson(outcome))
 }
 

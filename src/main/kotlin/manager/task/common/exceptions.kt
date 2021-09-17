@@ -1,4 +1,4 @@
-package manager.task.exceptions
+package manager.task.common
 
 class ConfigurationException(message: String) : RuntimeException(message)
 // TODO : перенести сюда сообщение и принимать параметр path

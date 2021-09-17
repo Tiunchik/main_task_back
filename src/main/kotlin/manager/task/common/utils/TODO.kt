@@ -1,4 +1,4 @@
-package manager.task.utils
+package manager.task.common.utils
 
 /**
  * TODO : (Done) WS механизм
