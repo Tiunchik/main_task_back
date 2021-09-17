@@ -1,7 +1,7 @@
 package manager.task.models
 
 data class User(
-    val nick: String,
-    val login: String,
-    val password: String,
+    val id: Long,
+    var email: String,
+    var password: String,
 )

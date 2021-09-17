@@ -1,3 +1,11 @@
 package manager.task.services
 
-class UserServ
+import manager.task.AppCtx
+
+class UserServ {
+
+    fun foo() {
+        AppCtx.authService
+    }
+
+}

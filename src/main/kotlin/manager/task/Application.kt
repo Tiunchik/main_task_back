@@ -5,10 +5,10 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
-
 import manager.task.configs.PsqlConfig
 import manager.task.dao.memory.UserRepo
 import manager.task.paths.userControllerPaths
+import manager.task.services.AuthService
 import manager.task.services.UserServ
 import manager.task.utils.log
 
@@ -32,12 +32,20 @@ import manager.task.utils.log
 object AppCtx {
     /* Configs */
     val psqlConfig = PsqlConfig()
+    lateinit var conf: PsqlConfig
 
     /* Repositories */
     val userRepo = UserRepo()
-    val userServ = UserServ()
 
     /* Services */
+    val userServ = UserServ()
+    val authService = AuthService()
+//    val authServicePoxy  = AuthServiceProxy()
+
+}
+
+fun AppCtx.init() {
+
 }
 
 fun main() {
@@ -52,43 +60,6 @@ fun main() {
         }
     }.start(wait = true)
 }
-val log = log<AppCtx>()
 
-//fun main() {
-////    val t = gson.toJson(WS.Income("c/user", "admin", "1234-5678-9012", 0, ""))
-////    val t = gson.toJson(WS.Outcome("1234-5678-9012", 0, true, ""))
-//
-//    val src = """
-//        {
-//        "reqId":"1234-5678-9012",
-//        "path":"c/user",
-//        "auth":"admin",
-//        "body":{
-//        "reqId":"1234-5678-9012",
-//        "path":"c/user",
-//        "auth":"admin",
-//        "body":""
-//        }
-//        }
-//    """.trimIndent()
-//
-////    val incomeInfo = parseIncomeInfo(src)
-////    log<AppCtx>().info("body", incomeInfo)
-////    val y = gson.fromJson(incomeInfo, WS.Income::class.java)
-////    println(y)
-////    println(y.body::class.simpleName)
-////    println(t)
-//
-////    val (income, body) = parseIncome(src)
-////    log.info("income", income)
-////    log.info("body", body)
-//}
-
-
-
-
-
-
-
-
+private val log = log<AppCtx>()
 

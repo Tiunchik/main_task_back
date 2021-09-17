@@ -7,6 +7,7 @@ import java.util.*
  * TODO : (optional) make THREAD template
  * TODO : (optional) make TIMESTAMP template
  * TODO : (optional) make option BACKGROUND for levels or symbols
+ * TODO : (unsure) write to File
  */
 inline fun <reified C : Any> log(): Logger<C> = LoggerImpl(C::class.java.simpleName)
 
@@ -18,29 +19,29 @@ inline fun <reified C : Any> log(): Logger<C> = LoggerImpl(C::class.java.simpleN
  */
 interface Logger<C> {
     fun dev(msg: () -> String) = dev(msg.invoke())
-    fun dev(msg: String, obj: () -> Any) = dev(msg, obj.invoke())
+    fun dev(msg: String, obj: () -> Any?) = dev(msg, obj.invoke())
     fun dev(msg: String)
-    fun dev(msg: String, obj: Any)
+    fun dev(msg: String, obj: Any?)
 
     fun debug(msg: () -> String) = debug(msg.invoke())
-    fun debug(msg: String, obj: () -> Any) = debug(msg, obj.invoke())
+    fun debug(msg: String, obj: () -> Any?) = debug(msg, obj.invoke())
     fun debug(msg: String)
-    fun debug(msg: String, obj: Any)
+    fun debug(msg: String, obj: Any?)
 
     fun info(msg: () -> String) = info(msg.invoke())
-    fun info(msg: String, obj: () -> Any) = info(msg, obj.invoke())
+    fun info(msg: String, obj: () -> Any?) = info(msg, obj.invoke())
     fun info(msg: String)
-    fun info(msg: String, obj: Any)
+    fun info(msg: String, obj: Any?)
 
     fun warm(msg: () -> String) = warm(msg.invoke())
-    fun warm(msg: String, obj: () -> Any) = warm(msg, obj.invoke())
+    fun warm(msg: String, obj: () -> Any?) = warm(msg, obj.invoke())
     fun warm(msg: String)
-    fun warm(msg: String, obj: Any)
+    fun warm(msg: String, obj: Any?)
 
     fun error(msg: () -> String) = error(msg.invoke())
-    fun error(msg: String, obj: () -> Any) = error(msg, obj.invoke())
+    fun error(msg: String, obj: () -> Any?) = error(msg, obj.invoke())
     fun error(msg: String)
-    fun error(msg: String, obj: Any)
+    fun error(msg: String, obj: Any?)
 
     fun levels(vararg levels: LogLevel)
 }
@@ -71,19 +72,19 @@ class LoggerImpl<C>(clazz: String) : Logger<C> {
 
 
     override fun dev(msg: String) = check(LogLevel.DEV) { println(of(LogLevel.DEV, msg)) }
-    override fun dev(msg: String, obj: Any) = check(LogLevel.DEV) { println(of(LogLevel.DEV, msg, obj)) }
+    override fun dev(msg: String, obj: Any?) = check(LogLevel.DEV) { println(of(LogLevel.DEV, msg, obj)) }
 
     override fun debug(msg: String) = check(LogLevel.DEBUG) { println(of(LogLevel.DEBUG, msg)) }
-    override fun debug(msg: String, obj: Any) = check(LogLevel.DEBUG) { println(of(LogLevel.DEBUG, msg, obj)) }
+    override fun debug(msg: String, obj: Any?) = check(LogLevel.DEBUG) { println(of(LogLevel.DEBUG, msg, obj)) }
 
     override fun info(msg: String) = check(LogLevel.INFO) { println(of(LogLevel.INFO, msg)) }
-    override fun info(msg: String, obj: Any) = check(LogLevel.INFO) { println(of(LogLevel.INFO, msg, obj)) }
+    override fun info(msg: String, obj: Any?) = check(LogLevel.INFO) { println(of(LogLevel.INFO, msg, obj)) }
 
     override fun warm(msg: String) = check(LogLevel.WARM) { println(of(LogLevel.WARM, msg)) }
-    override fun warm(msg: String, obj: Any) = check(LogLevel.WARM) { println(of(LogLevel.WARM, msg, obj)) }
+    override fun warm(msg: String, obj: Any?) = check(LogLevel.WARM) { println(of(LogLevel.WARM, msg, obj)) }
 
     override fun error(msg: String) = check(LogLevel.ERROR) { println(of(LogLevel.ERROR, msg)) }
-    override fun error(msg: String, obj: Any) = check(LogLevel.ERROR) { println(of(LogLevel.ERROR, msg, obj)) }
+    override fun error(msg: String, obj: Any?) = check(LogLevel.ERROR) { println(of(LogLevel.ERROR, msg, obj)) }
 
     override fun levels(vararg levels: LogLevel): Unit = run { this.levels.clear(); this.levels.addAll(levels) }
 
@@ -91,7 +92,7 @@ class LoggerImpl<C>(clazz: String) : Logger<C> {
     private fun check(level: LogLevel, print: () -> Unit) = if (levels.contains(level)) print.invoke() else Unit
 
     private fun of(level: LogLevel, msg: String): String = buildInfo(level, msg)
-    private fun of(level: LogLevel, msg: String, obj: Any): String {
+    private fun of(level: LogLevel, msg: String, obj: Any?): String {
         return when (obj) {
             is Iterable<*> -> makeIterableMsg(level, msg, obj as Iterable<Any>)
             is Map<*, *> -> makeMapMsg(level, msg, obj as Map<Any, Any>)
@@ -130,9 +131,10 @@ class LoggerImpl<C>(clazz: String) : Logger<C> {
                 .replaceSpecialSymbols()
     }
 
-    private fun wrap(obj: Any): String {
-        return if (obj is String) "\"" + obj + "\""
-        else obj.toString()
+    private fun wrap(obj: Any?): String {
+        if (obj == null) return "null"
+        if (obj is String) return "\"" + obj + "\""
+        return obj.toString()
     }
 
     private fun String.replaceSpecialSymbols(): String {

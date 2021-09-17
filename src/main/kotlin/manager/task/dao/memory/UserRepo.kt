@@ -5,24 +5,29 @@ import manager.task.models.User
 class UserRepo {
     private val userStore = mutableListOf<User>()
 
-    fun userCreate(user: User): Any {
-        // TODO : сделать парсинг в параметров для wsMsg.
-        userStore += user
-        return ""
+    /* create */
+    infix fun create(user: User) {
+        userStore.add(user)
+    }
+    /* read */
+    infix fun get(email: String) = userStore.find { it.email == email }
+    infix fun get(id: Long) = userStore.find { it.id == id }
+    /* update */
+    infix fun update(user: User) {
+        userStore[user.id.toInt()].apply {
+            this.email = user.email
+            this.password = user.password
+        }
+    }
+    /* delete */
+    infix fun delete(user: User) {
+        userStore.removeIf {  it.id == user.id}
+    }
+    infix fun delete(id: Long) {
+        userStore.removeIf {  it.id == id}
+    }
+    infix fun delete(email: String) {
+        userStore.removeIf {  it.email == email}
     }
 
-//    fun userRead(lines: List<String>): Any {
-//        val searchParam = lines[1]
-//        userStore.forEach { if (it.matchAnyField(searchParam)) return it }
-//        return ""
-//    }
-}
-
-private fun User.matchAnyField(search: Any): Boolean {
-    if (search is String) {
-        if (nick.contains(search)) return true
-        if (login.contains(search)) return true
-        if (password.contains(search)) return true
-    }
-    return false
 }
