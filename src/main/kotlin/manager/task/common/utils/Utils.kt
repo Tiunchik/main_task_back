@@ -3,9 +3,12 @@ package manager.task.common.utils
 import com.google.gson.Gson
 import manager.task.common.JsonParseException
 import java.lang.reflect.Type
+import java.time.format.DateTimeFormatter
 
 object Utils {
     val gson by lazy { Gson() }
+    val localDateTimeFormatter: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm") }
+
 
     inline fun <reified T> fromJson(src: String, exceptionMsg: String? = null): T {
         try {
@@ -18,14 +21,18 @@ object Utils {
             }
         }
     }
-     fun <T> fromJson(src: String, typeOfT : Type, exceptionMsg: String? = null): T {
+
+    fun <T> fromJson(src: String, typeOfT: Type, exceptionMsg: String? = null): T {
         try {
             return gson.fromJson(src, typeOfT)
         } catch (e: Throwable) {
             if (exceptionMsg == null) {
                 throw JsonParseException("Fail json parse → ${typeOfT.typeName} from src:\"$src\"", e)
             } else {
-                throw JsonParseException(exceptionMsg + "\r\nFail json parse → ${typeOfT.typeName} from src:src:\"$src\"", e)
+                throw JsonParseException(
+                    exceptionMsg + "\r\nFail json parse → ${typeOfT.typeName} from src:src:\"$src\"",
+                    e
+                )
             }
         }
     }

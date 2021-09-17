@@ -3,7 +3,7 @@ package manager.task.common
 import java.util.*
 
 /**
- * TODO : msg background
+ * TODO : (unsure) msg background colour
  * TODO : (optional) make THREAD template
  * TODO : (optional) make TIMESTAMP template
  * TODO : (optional) make option BACKGROUND for levels or symbols
@@ -54,13 +54,13 @@ private const val LOG_VAR_TEMPLATE = "*LEVEL* || *CLASS* => *MSG* :: *OBJ*"
 /* symbols for replace */
 private val specSymbols: Map<String, String> by lazy {
     mapOf(
-            Pair("-", "$TEXT_GREEN-$TEXT_RESET"),
-            Pair("--", "$TEXT_GREEN--$TEXT_RESET"),
-            Pair(" & ", "$TEXT_BLUE & $TEXT_RESET"),
-            Pair(" = ", "$TEXT_RED = $TEXT_RESET"),
-            Pair(" : ", "$TEXT_RED : $TEXT_RESET"),
-            Pair("::", "$TEXT_RED::$TEXT_RESET"),
-            Pair("=>", "$TEXT_BLUE=>$TEXT_RESET"),
+        Pair("-", "$TEXT_GREEN-$TEXT_RESET"),
+        Pair("--", "$TEXT_GREEN--$TEXT_RESET"),
+        Pair(" & ", "$TEXT_BLUE & $TEXT_RESET"),
+        Pair(" = ", "$TEXT_RED = $TEXT_RESET"),
+        Pair(" : ", "$TEXT_RED : $TEXT_RESET"),
+        Pair("::", "$TEXT_RED::$TEXT_RESET"),
+        Pair("=>", "$TEXT_BLUE=>$TEXT_RESET"),
     )
 }
 
@@ -118,17 +118,17 @@ class LoggerImpl<C>(clazz: String) : Logger<C> {
 
     private fun buildInfo(level: LogLevel, msg: String): String {
         return infTemplate
-                .replace("*LEVEL*", level.toString())
-                .replace("*MSG*", msg)
-                .replaceSpecialSymbols()
+            .replace("*LEVEL*", level.toString())
+            .replace("*MSG*", msg)
+            .replaceSpecialSymbols()
     }
 
     private fun buildValue(level: LogLevel, msg: String, any: Any): String {
         return valTemplate
-                .replace("*LEVEL*", level.toString())
-                .replace("*MSG*", msg)
-                .replace("*OBJ*", any.toString())
-                .replaceSpecialSymbols()
+            .replace("*LEVEL*", level.toString())
+            .replace("*MSG*", msg)
+            .replace("*OBJ*", any.toString())
+            .replaceSpecialSymbols()
     }
 
     private fun wrap(obj: Any?): String {

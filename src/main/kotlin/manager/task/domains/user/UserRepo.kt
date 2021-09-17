@@ -7,9 +7,11 @@ class UserRepo {
     infix fun create(user: User) {
         userStore.add(user)
     }
+
     /* read */
     infix fun get(email: String) = userStore.find { it.email == email }
     infix fun get(id: Long) = userStore.find { it.id == id }
+
     /* update */
     infix fun update(user: User) {
         userStore[user.id.toInt()].apply {
@@ -17,15 +19,18 @@ class UserRepo {
             this.password = user.password
         }
     }
+
     /* delete */
     infix fun delete(user: User) {
-        userStore.removeIf {  it.id == user.id}
+        userStore.removeIf { it.id == user.id }
     }
+
     infix fun delete(id: Long) {
-        userStore.removeIf {  it.id == id}
+        userStore.removeIf { it.id == id }
     }
+
     infix fun delete(email: String) {
-        userStore.removeIf {  it.email == email}
+        userStore.removeIf { it.email == email }
     }
 
 }

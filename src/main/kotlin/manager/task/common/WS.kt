@@ -4,14 +4,17 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import manager.task.AppCtx
 import manager.task.common.utils.Utils
-import manager.task.common.utils.Utils.gson
 import java.lang.reflect.Type
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
 
 private const val PARSE_FAIL = "parse_failed"
 private val log = log<WS>()
+
 /**
+ *
+ * Подписывается и слушает ws - обрабатывает услышанное
+ *
  * Exceptions:
  * JsonParseException - не удалось распарсить полученный текст из ws -> WS.Income(...)
  * PathIsNotSupported - income.path не найдет среди всех добавленных paths
@@ -19,13 +22,12 @@ private val log = log<WS>()
  * RuntimeException - всё что упало походу исполнения pathWalker
  */
 suspend fun DefaultWebSocketServerSession.webSocketListeningMechanism() {
-    send("You are connected! to Yurification! ^_^")
     for (frame in incoming) {
         // TODO : когда-то, понадобиться работать с файлами. тут есть Binary class
         frame as? Frame.Text ?: continue
 
         var reqId = PARSE_FAIL
-        var pathKeeper : WS.Paths.PathKeeper = WS.Paths.ExceptionPathKeeper
+        var pathKeeper: WS.Paths.PathKeeper = WS.Paths.ExceptionPathKeeper
         try {
             /* упадём с JsonParseException(...) или пройдём дальше */
             val (income, rawJsonBody) = parseIncome(frame.readText())
@@ -43,15 +45,17 @@ suspend fun DefaultWebSocketServerSession.webSocketListeningMechanism() {
 
             /* упадём с JsonParseException(...) или пройдём дальше */
             val response: Any = if (pathKeeper.expectedParamType.typeName == "kotlin.Unit") {
-                pathKeeper.walk(Unit, activityId, income.auth)
+                /* можно спокойно передавать Unit т.к. параметр Не будет использован внутри pathWalker */
+                pathKeeper.pathWalk(Unit, activityId, income.auth)
             } else {
-                income.body = Utils.fromJson(rawJsonBody, pathKeeper.expectedParamType) ?:
-                 throw JsonParseException("Unexpected income.body=\"${income.body}\"")
-                pathKeeper.walk(income.body, activityId, income.auth)
+                /* Runtime magic! Парсер может не упасть с ошибкой и напарсить нам null, поэтому null check */
+                income.body = Utils.fromJson(rawJsonBody, pathKeeper.expectedParamType)
+                    ?: throw JsonParseException("Unexpected income.body=\"${income.body}\"")
+                pathKeeper.pathWalk(income.body, activityId, income.auth)
             }
 
-            /* если pathWalker ничего не вернул, то мы и не будет что-то отправлять. */
-            if (response !is Unit) sendOutcome(WS.Outcome(reqId, true, gson.toJson(response)))
+            /* если pathWalker ничего не вернул, то мы и response не будет отправлять. */
+            if (response !is Unit) sendOutcome(WS.Outcome(reqId, true, Utils.toJson(response)))
         } catch (e: Throwable) {
             val outcome = WS.Outcome(reqId, false, "${e::class.qualifiedName}(\"${e.message}\")")
             log.error("Path=\"${pathKeeper.path}\" reqId=\"$reqId\" exception: $outcome")
@@ -73,10 +77,10 @@ private fun parseIncome(src: String): Pair<WS.Income, String> {
 
 private suspend fun DefaultWebSocketServerSession.sendOutcome(outcome: WS.Outcome) {
     WS.Requests.setOutcome(outcome.reqId, outcome)
-    send(gson.toJson(outcome))
+    send(Utils.toJson(outcome))
 }
 
-
+/** просто namespace */
 class WS {
 
     data class Income(
@@ -96,7 +100,7 @@ class WS {
 
 
     object Paths {
-        private val paths = mutableMapOf<String, PathKeeper>()
+        val paths = mutableMapOf<String, PathKeeper>()
 
         operator fun get(path: String): PathKeeper = paths[path]
             ?: throw PathIsNotSupported(path)
@@ -119,7 +123,7 @@ class WS {
             val expectedParamType: Type
             val isNeedAuth: Boolean
 
-            fun walk(param: Any, activityId: Long, auth: String): Any
+            fun pathWalk(param: Any, activityId: Long, auth: String): Any
         }
 
         class PathKeeperSingle(
@@ -128,7 +132,7 @@ class WS {
             override val isNeedAuth: Boolean,
             private val pathWalker: AppCtx.(Any) -> Any
         ) : PathKeeper {
-            override fun walk(param: Any, activityId: Long, auth: String) = pathWalker.invoke(AppCtx, param)
+            override fun pathWalk(param: Any, activityId: Long, auth: String) = pathWalker.invoke(AppCtx, param)
         }
 
         class PathKeeperCtx(
@@ -137,7 +141,7 @@ class WS {
             override val isNeedAuth: Boolean,
             private val pathWalker: AppCtx.(Any, PathCtx) -> Any
         ) : PathKeeper {
-            override fun walk(param: Any, activityId: Long, auth: String) {
+            override fun pathWalk(param: Any, activityId: Long, auth: String) {
                 pathWalker.invoke(AppCtx, param, PathCtx(auth, activityId, path, isNeedAuth))
             }
         }
@@ -148,7 +152,8 @@ class WS {
                 get() = TODO("Not yet implemented")
             override val isNeedAuth: Boolean
                 get() = TODO("Not yet implemented")
-            override fun walk(param: Any, activityId: Long, auth: String): Any = TODO("Not yet implemented")
+
+            override fun pathWalk(param: Any, activityId: Long, auth: String): Any = TODO("Not yet implemented")
         }
 
         data class PathCtx(
@@ -172,14 +177,17 @@ class WS {
     }
 
 
-    /** Только для логгирования и дебага */
+    /**
+     * Kоггирования, дебаг, activityId
+     * Собирает инфу о income && outcome
+     */
     object Requests {
         private val log = log<Requests>()
 
-        private val requests = mutableMapOf<String, RequestModel>()
+        val requests = mutableMapOf<String, RequestModel>()
         private var nextActivityId: AtomicLong = AtomicLong(0)
-
         fun getNextActivityId() = nextActivityId.getAndIncrement()
+
 
         fun setIncome(reqId: String, activityId: Long, income: Income) {
             requests[reqId] = RequestModel(activityId).apply {
@@ -197,11 +205,11 @@ class WS {
             }
         }
 
-        private data class RequestModel(val activityId: Long) {
+        data class RequestModel(val activityId: Long) {
             lateinit var income: Income
-            lateinit var outcome: Outcome
+            var outcome: Outcome? = null
             lateinit var incomeTime: LocalDateTime
-            lateinit var outcomeTime: LocalDateTime
+            var outcomeTime: LocalDateTime? = null
         }
     }
 

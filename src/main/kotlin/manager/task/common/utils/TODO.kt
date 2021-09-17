@@ -6,7 +6,10 @@ package manager.task.common.utils
  * TODO : (Done) авто-парсинг JSON в POJO ожидаемый методов который обрабатывает path
  * TODO : (Done) wrap bad gson ParseException
  * TODO : (Done) check try to add path duplicate - Exception if it's duplicate!
- *
+ * TODO : (Done) test parse primitive types ? -> *magic* valueWrapper ?
+ * TODO : (Done) pathCtx.currentUser by lazy {if(!isNeedAuth) thrown AuthException}
+ * TODO : (Done) printTable java -> Kotlin
+ * TODO :
  * TODO : ### path ###
  * TODO : (Done) Unit param - WORK
  * TODO : (Done) One pram - WORK
@@ -25,14 +28,9 @@ package manager.task.common.utils
  * TODO : ? свой аналог кролика/kafka - message hub
  * TODO :
  * TODO : - по готовности WS engine написать Cпецификацию по этому механизму.
- * TODO : - test parse primitive types ? -> *magic* valueWrapper ?
- * TODO : - pathCtx.currentUser by lazy {if(!isNeedAuth) thrown AuthException}
  * TODO :
- * TODO :
- * TODO : printTable java -> Kotlin
  * TODO :
  * TODO : authService && authServicePoxy - на сколько юзабельный кейс? Заменить 1 бин, на другой.
- * TODO : папки, домейн модель, в целом Круто, а какие минусы?
  * TODO :
  * TODO :
 
