@@ -6,7 +6,7 @@ import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.request.*
 
-fun Application.configureRouting() {
+fun Application.configureHttpRouting() {
     // Starting point for a Ktor app:
     routing {
         get("/") {
