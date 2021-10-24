@@ -52,8 +52,7 @@ jooq {
                         fluentSetters = true
                     }
                     target {
-                        directory = 'src/main/kotlin'
-                        packageName = 'jooq.task.domians'
+                        packageName = 'manager.task.domians'
                     }
                     strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
                 }
@@ -61,3 +60,7 @@ jooq {
         }
     }
 }
+
+sourceSets.main.java.srcDirs (
+        tasks.named('generateKotlinDTOJooq').flatMap { it.outputDir }
+)
