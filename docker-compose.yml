@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  psql_ws:
+    image: postgres:14.0-alpine
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: task
+      POSTGRES_USER: psql
+      POSTGRES_PASSWORD: password
+
+#url - jdbc:postgresql://localhost:5433/task

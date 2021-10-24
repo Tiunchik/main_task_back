@@ -1,6 +1,7 @@
 plugins {
     id 'application'
     id 'org.jetbrains.kotlin.jvm' version '1.5.30'
+    id 'nu.studer.jooq' version '6.0.1'
 }
 
 group "manager.task"
@@ -8,14 +9,55 @@ version "0.0.1"
 mainClassName = "manager.task.ApplicationKt"
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
+    //implementation 'org.jooq:jooq:3' // manually add jOOQ dependency
+    implementation 'org.jooq:jooq-kotlin:3.15.3'
+    jooqGenerator 'org.postgresql:postgresql:42.3.0'
+
+    implementation 'org.postgresql:postgresql:42.3.0'
     implementation "io.ktor:ktor-server-core:$ktor_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
     implementation "io.ktor:ktor-websockets:$ktor_version"
     implementation "ch.qos.logback:logback-classic:$logback_version"
+
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+}
+
+jooq {
+    configurations {
+        kotlinDTO {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.WARN
+                jdbc {
+                    driver = 'org.postgresql.Driver'
+                    url = 'jdbc:postgresql://localhost:5433/task'
+                    user = 'psql'
+                    password = 'password'
+                }
+                generator {
+                    name = 'org.jooq.codegen.KotlinGenerator'
+                    database {
+                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        inputSchema = 'public'
+                    }
+                    generate {
+                        deprecated = false
+                        records = true
+                        immutablePojos = true
+                        fluentSetters = true
+                    }
+                    target {
+                        directory = 'src/main/kotlin'
+                        packageName = 'jooq.task.domians'
+                    }
+                    strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                }
+            }
+        }
+    }
 }

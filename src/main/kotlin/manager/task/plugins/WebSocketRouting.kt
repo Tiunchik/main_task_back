@@ -4,17 +4,17 @@ import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import manager.task.websocket.SystemConnection
+import manager.task.websocket.Connection
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-fun Application.configureWebsocketRouting() {
+fun Application.configureWebsocketRouting(): Collection<Connection> {
 
-    val connections = Collections.synchronizedSet<SystemConnection>(LinkedHashSet())
+    val connections = Collections.synchronizedSet<Connection>(LinkedHashSet())
 
     routing {
         webSocket("/echo") {
-            connections += SystemConnection(this)
+            connections += Connection(this)
             for (frame in incoming) {
                 when (frame) {
                     is Frame.Text -> send(Frame.Text(frame.readText()))
@@ -22,4 +22,6 @@ fun Application.configureWebsocketRouting() {
             }
         }
     }
+
+    return connections
 }
