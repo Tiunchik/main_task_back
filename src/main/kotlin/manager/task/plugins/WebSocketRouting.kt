@@ -4,24 +4,29 @@ import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import manager.task.Context
 import manager.task.websocket.Connection
+import reactor.core.Disposable
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-fun Application.configureWebsocketRouting(): Collection<Connection> {
-
-    val connections = Collections.synchronizedSet<Connection>(LinkedHashSet())
+fun Application.configureWebsocketRouting(disp: Disposable) {
 
     routing {
         webSocket("/echo") {
-            connections += Connection(this)
+            Context.connections += Connection(this)
             for (frame in incoming) {
                 when (frame) {
                     is Frame.Text -> send(Frame.Text(frame.readText()))
                 }
             }
         }
-    }
 
-    return connections
+        webSocket("/films/subscribe") {
+            Context.filmsSubscriber += Connection(this)
+            for (frame in incoming) {
+                send(Frame.Text(disp.toString()))
+            }
+        }
+    }
 }
