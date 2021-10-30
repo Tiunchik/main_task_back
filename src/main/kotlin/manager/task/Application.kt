@@ -1,5 +1,6 @@
 package manager.task
 
+import io.ktor.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import manager.task.plugins.*
@@ -8,12 +9,15 @@ import manager.task.websocket.applyWebSocketModule
 
 fun main() {
 
-    val dataBase = DataBaseWarden()
 
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0", watchPaths = listOf("manager.task.**")) {
         applyWebSocketModule()
 
         configureHttpRouting()
-        configureWebsocketRouting(dataBase.filmActions)
+        configureWebsocketRouting()
+        val dataBase = DataBaseWarden(log)
+        dataBase.createListener()
     }.start(wait = true)
+
 }

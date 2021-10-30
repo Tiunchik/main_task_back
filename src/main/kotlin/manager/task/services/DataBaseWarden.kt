@@ -1,44 +1,57 @@
 package manager.task.services
 
+
 import io.ktor.http.cio.websocket.*
 import io.r2dbc.postgresql.api.PostgresqlConnection
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import manager.task.Context
-import manager.task.domians.tables.Films
 import manager.task.domians.tables.records.FilmsRecord
 import org.jooq.DSLContext
-import reactor.core.publisher.Flux
+import org.slf4j.Logger
+import reactor.core.publisher.Mono
+import java.sql.Date
+import java.time.LocalDate
 
 
-class DataBaseWarden() {
+class DataBaseWarden(val log: Logger) {
+
 
     /**
+     * Живой пример работы с postgresql listener/notification
      * https://github.com/mp911de/r2dbc-postgres-notification-example/blob/main/src/main/java/com/example/demo/DemoApplication.java
      *
-     * Живой пример работы с postgresql listener/notification
+     * Еще примеры, в том числе и с пояснениями изменений в БД
+     * https://overcoder.net/q/229628/%D0%BA%D0%B0%D0%BA-%D0%BF%D0%BE%D0%BB%D1%83%D1%87%D0%B8%D1%82%D1%8C-%D0%B0%D1%81%D0%B8%D0%BD%D1%85%D1%80%D0%BE%D0%BD%D0%BD%D1%83%D1%8E-%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D1%8F%D0%B5%D0%BC%D1%83%D1%8E-%D1%81%D0%BE%D0%B1%D1%8B%D1%82%D0%B8%D1%8F%D0%BC%D0%B8-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D1%83-listen-notify-%D0%B2-java-%D1%81
      *
      */
 
     val dslContext: DSLContext = Context.dbConfiguration.dbDsl
     val filmSubscribers = Context.filmsSubscriber
-    val connection: PostgresqlConnection = Context.dbConfiguration.conFactory as PostgresqlConnection
+    val connection: PostgresqlConnection? = Mono
+        .from(Context.dbConfiguration.conFactory.create())
+        .cast(PostgresqlConnection::class.java).block()
 
+    fun createListener() {
+        connection!!.createStatement("LISTEN films_changed")
+            .execute()
+            .doOnNext {
+                log.info("Catch pipeline object after mapping \n $it")
+            }
+            .subscribe()
+        connection
+            .notifications
+            .doOnNext { log.info("reseived notifications") }
+            .subscribe();
+    }
 
-    val filmActions = Flux.from(
-        dslContext.selectFrom(Films.FILMS)
-    )
-        .collectList()
-        .doOnNext { sendListTo(it) }
-        .subscribe()
-
-    fun sendListTo(list: List<FilmsRecord>) = runBlocking {
+    private fun sendListTo(record: FilmsRecord) = runBlocking {
         launch {
             filmSubscribers.asIterable()
                 .filter { it.session.isActive }
                 .forEach {
-                    it.session.outgoing.send(Frame.Text(list.toString()))
+                    it.session.outgoing.send(Frame.Text(record.toString()))
                 }
         }
     }

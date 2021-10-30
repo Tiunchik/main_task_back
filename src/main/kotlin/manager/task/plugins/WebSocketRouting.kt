@@ -10,7 +10,7 @@ import reactor.core.Disposable
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-fun Application.configureWebsocketRouting(disp: Disposable) {
+fun Application.configureWebsocketRouting() {
 
     routing {
         webSocket("/echo") {
@@ -24,9 +24,6 @@ fun Application.configureWebsocketRouting(disp: Disposable) {
 
         webSocket("/films/subscribe") {
             Context.filmsSubscriber += Connection(this)
-            for (frame in incoming) {
-                send(Frame.Text(disp.toString()))
-            }
         }
     }
 }
