@@ -1,6 +1,7 @@
 package manager.task.services
 
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.cio.websocket.*
 import io.r2dbc.postgresql.api.PostgresqlConnection
 import kotlinx.coroutines.isActive
@@ -32,21 +33,28 @@ class DataBaseWarden(val log: Logger) {
     val connection: PostgresqlConnection? = Mono
         .from(Context.dbConfiguration.conFactory.create())
         .cast(PostgresqlConnection::class.java).block()
+    val objectMapper = ObjectMapper()
+
 
     fun createListener() {
         connection!!.createStatement("LISTEN films_changed")
             .execute()
             .doOnNext {
-                log.info("Catch pipeline object after mapping \n $it")
+                log.info("Establish psql listener connection")
             }
             .subscribe()
         connection
             .notifications
-            .doOnNext { log.info("reseived notifications") }
+            .doOnNext { notify ->
+                log.info("received notifications")
+                notify.parameter?.let {
+                    sendListTo(it)
+                }
+            }
             .subscribe();
     }
 
-    private fun sendListTo(record: FilmsRecord) = runBlocking {
+    private fun sendListTo(record: String) = runBlocking {
         launch {
             filmSubscribers.asIterable()
                 .filter { it.session.isActive }

@@ -24,6 +24,11 @@ fun Application.configureWebsocketRouting() {
 
         webSocket("/films/subscribe") {
             Context.filmsSubscriber += Connection(this)
+            for (frame in incoming) {
+                when (frame) {
+                    is Frame.Text -> send(Frame.Text(frame.readText()))
+                }
+            }
         }
     }
 }
