@@ -11,7 +11,7 @@ fun main() {
 
 
 
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", watchPaths = listOf("manager.task.**")) {
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         applyWebSocketModule()
 
         configureHttpRouting()

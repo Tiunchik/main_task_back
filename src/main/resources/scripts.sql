@@ -14,7 +14,7 @@ alter table films owner to psql;
 
 CREATE OR REPLACE FUNCTION films_notify_change() RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM pg_notify('films_changed',row_to_json(NEW)::text);
+    PERFORM pg_notify('films_changed','{"tableName":"films_changed","value":"'||row_to_json(NEW)::text||'"}');
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -24,7 +24,3 @@ create trigger films_table_change
     on films
     for each row
 execute procedure films_notify_change();
-
-CREATE TRIGGER films_table_change
-    AFTER INSERT OR UPDATE OR DELETE ON films
-    FOR EACH ROW EXECUTE PROCEDURE films_notify_change();

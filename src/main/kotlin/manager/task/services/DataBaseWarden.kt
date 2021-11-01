@@ -3,11 +3,13 @@ package manager.task.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.cio.websocket.*
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.r2dbc.postgresql.api.PostgresqlConnection
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import manager.task.Context
+import manager.task.domains.DataBaseSubscribeResponse
 import manager.task.domians.tables.records.FilmsRecord
 import org.jooq.DSLContext
 import org.slf4j.Logger
@@ -20,6 +22,7 @@ class DataBaseWarden(val log: Logger) {
 
 
     /**
+     *
      * Живой пример работы с postgresql listener/notification
      * https://github.com/mp911de/r2dbc-postgres-notification-example/blob/main/src/main/java/com/example/demo/DemoApplication.java
      *
@@ -33,8 +36,8 @@ class DataBaseWarden(val log: Logger) {
     val connection: PostgresqlConnection? = Mono
         .from(Context.dbConfiguration.conFactory.create())
         .cast(PostgresqlConnection::class.java).block()
-    val objectMapper = ObjectMapper()
 
+    val objectMapper = ObjectMapper()
 
     fun createListener() {
         connection!!.createStatement("LISTEN films_changed")
@@ -43,24 +46,29 @@ class DataBaseWarden(val log: Logger) {
                 log.info("Establish psql listener connection")
             }
             .subscribe()
+
         connection
             .notifications
             .doOnNext { notify ->
                 log.info("received notifications")
-                notify.parameter?.let {
-                    sendListTo(it)
+                notify.parameter?.let { data ->
+                    objectMapper
+                        .readValue<DataBaseSubscribeResponse>(data)
+                        .also { sendListTo(it.tableName, it.value) }
                 }
             }
             .subscribe();
     }
 
-    private fun sendListTo(record: String) = runBlocking {
+    private fun sendListTo(table: String, record: String) = runBlocking {
         launch {
-            filmSubscribers.asIterable()
-                .filter { it.session.isActive }
-                .forEach {
-                    it.session.outgoing.send(Frame.Text(record.toString()))
-                }
+            Context.mapSubscribers.get(table)?.let { set ->
+                set.asIterable()
+                    .filter { it.session.isActive }
+                    .forEach {
+                        it.session.outgoing.send(Frame.Text(record))
+                    }
+            }
         }
     }
 }
