@@ -2,6 +2,7 @@ package manager.task.services
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.http.cio.websocket.*
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.r2dbc.postgresql.api.PostgresqlConnection
@@ -38,6 +39,7 @@ class DataBaseWarden(val log: Logger) {
         .cast(PostgresqlConnection::class.java).block()
 
     val objectMapper = ObjectMapper()
+        .registerModule(KotlinModule())
 
     fun createListener() {
         connection!!.createStatement("LISTEN films_changed")
@@ -54,7 +56,7 @@ class DataBaseWarden(val log: Logger) {
                 notify.parameter?.let { data ->
                     objectMapper
                         .readValue<DataBaseSubscribeResponse>(data)
-                        .also { sendListTo(it.tableName, it.value) }
+                        .also { sendListTo(it.tableName, it.value.toPrettyString()) }
                 }
             }
             .subscribe();
@@ -62,7 +64,7 @@ class DataBaseWarden(val log: Logger) {
 
     private fun sendListTo(table: String, record: String) = runBlocking {
         launch {
-            Context.mapSubscribers.get(table)?.let { set ->
+            Context.mapSubscribers[table]?.let { set ->
                 set.asIterable()
                     .filter { it.session.isActive }
                     .forEach {

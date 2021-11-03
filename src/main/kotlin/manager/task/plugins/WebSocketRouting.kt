@@ -1,6 +1,7 @@
 package manager.task.plugins
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
@@ -20,6 +21,8 @@ import kotlin.collections.LinkedHashSet
 fun Application.configureWebsocketRouting() {
 
     val objectMapper = ObjectMapper()
+        .registerModule(KotlinModule())
+
     val enumMap = Method.values().asIterable().associateBy { it.name }
 
     routing {
@@ -33,7 +36,7 @@ fun Application.configureWebsocketRouting() {
         }
 
         webSocket("/subscribe") {
-            Context.filmsSubscriber += Connection(this)
+            Context.filmsSubscriber += Connection(this@webSocket)
             for (frame in incoming) {
                 when (frame) {
                     is Frame.Text -> {
