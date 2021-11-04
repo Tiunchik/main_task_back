@@ -1,4 +1,4 @@
-package manager.task.domains
+package manager.task.models
 
 import com.fasterxml.jackson.databind.JsonNode
 

@@ -8,22 +8,18 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 import manager.task.Context
-import manager.task.domains.RpcRequestExample
-import manager.task.domains.WebSocketSubscribeRequest
+import manager.task.models.RpcRequestExample
+import manager.task.models.WebSocketSubscribeRequest
 import manager.task.enums.Method
-import manager.task.services.EnumServiceType
 import manager.task.websocket.Connection
-import reactor.core.Disposable
-import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
-import kotlin.collections.LinkedHashSet
 
 fun Application.configureWebsocketRouting() {
 
     val objectMapper = ObjectMapper()
         .registerModule(KotlinModule())
 
-    val enumMap = Method.values().asIterable().associateBy { it.name }
+    val enumMap = Method.values().asIterable().associateBy { it.name } //inject()
 
     routing {
         webSocket("/methods") {

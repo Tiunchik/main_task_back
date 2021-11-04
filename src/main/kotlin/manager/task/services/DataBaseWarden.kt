@@ -10,13 +10,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import manager.task.Context
-import manager.task.domains.DataBaseSubscribeResponse
-import manager.task.domians.tables.records.FilmsRecord
+import manager.task.models.DataBaseSubscribeResponse
 import org.jooq.DSLContext
 import org.slf4j.Logger
 import reactor.core.publisher.Mono
-import java.sql.Date
-import java.time.LocalDate
 
 
 class DataBaseWarden(val log: Logger) {
